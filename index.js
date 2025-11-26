@@ -2,16 +2,16 @@
 const BUDGET_KEY = 'budgetApp_daily_budget';
 const CURRENT_EXPENSES_KEY = 'budgetApp_current_expenses';
 const DAILY_RECORDS_KEY = 'budgetApp_daily_history';
-const CURRENT_CYCLE_DATE_KEY = 'budgetApp_current_cycle_date'; 
+const CURRENT_CYCLE_DATE_KEY = 'budgetApp_current_cycle_date';
 
 // --- Global State Variables ---
 let budget = 0;
 let currentExpenses = [];
-let dailyRecords = []; 
-let expenses = 0; 
-let balance = 0; 
-let currentView = 'current'; 
-let currentCycleDate = new Date().toISOString().split('T')[0]; 
+let dailyRecords = [];
+let expenses = 0;
+let balance = 0;
+let currentView = 'current';
+let currentCycleDate = new Date().toISOString().split('T')[0];
 
 // --- DOM Elements ---
 const appContainer = document.getElementById('app-container');
@@ -39,28 +39,28 @@ const generateId = () => Date.now().toString(36) + Math.random().toString(36).su
  * Loads data from localStorage.
  */
 const loadData = () => {
-     budget = parseFloat(localStorage.getItem(BUDGET_KEY) || 0);
-     currentCycleDate = localStorage.getItem(CURRENT_CYCLE_DATE_KEY) || new Date().toISOString().split('T')[0];
-     
-     const loadArray = (key) => {
-         try {
-             const rawData = JSON.parse(localStorage.getItem(key) || '[]');
-             return rawData.map(t => ({
-                 ...t,
-                 amount: parseFloat(t.amount),
-                 startingBudget: t.startingBudget !== undefined ? parseFloat(t.startingBudget) : undefined,
-                 endingBalance: t.endingBalance !== undefined ? parseFloat(t.endingBalance) : undefined,
-                 totalExpenses: t.totalExpenses !== undefined ? parseFloat(t.totalExpenses) : undefined,
-                 createdAt: t.createdAt || new Date().toISOString()
-             }));
-         } catch (e) {
-             console.error(`Error loading data for key ${key}:`, e);
-             return [];
-         }
-     };
-     
-     currentExpenses = loadArray(CURRENT_EXPENSES_KEY);
-     dailyRecords = loadArray(DAILY_RECORDS_KEY);
+    budget = parseFloat(localStorage.getItem(BUDGET_KEY) || 0);
+    currentCycleDate = localStorage.getItem(CURRENT_CYCLE_DATE_KEY) || new Date().toISOString().split('T')[0];
+
+    const loadArray = (key) => {
+        try {
+            const rawData = JSON.parse(localStorage.getItem(key) || '[]');
+            return rawData.map(t => ({
+                ...t,
+                amount: parseFloat(t.amount),
+                startingBudget: t.startingBudget !== undefined ? parseFloat(t.startingBudget) : undefined,
+                endingBalance: t.endingBalance !== undefined ? parseFloat(t.endingBalance) : undefined,
+                totalExpenses: t.totalExpenses !== undefined ? parseFloat(t.totalExpenses) : undefined,
+                createdAt: t.createdAt || new Date().toISOString()
+            }));
+        } catch (e) {
+            console.error(`Error loading data for key ${key}:`, e);
+            return [];
+        }
+    };
+
+    currentExpenses = loadArray(CURRENT_EXPENSES_KEY);
+    dailyRecords = loadArray(DAILY_RECORDS_KEY);
 };
 
 /**
@@ -72,7 +72,7 @@ const saveData = () => {
 
     const sortedCurrent = currentExpenses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     localStorage.setItem(CURRENT_EXPENSES_KEY, JSON.stringify(sortedCurrent));
-    
+
     const sortedRecords = dailyRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
     localStorage.setItem(DAILY_RECORDS_KEY, JSON.stringify(sortedRecords));
 };
@@ -101,7 +101,7 @@ const saveBudget = () => {
 
 const addExpense = (event) => {
     event.preventDefault();
-    
+
     const descriptionInput = document.getElementById('expense-description-input');
     const amountInput = document.getElementById('expense-amount-input');
 
@@ -122,7 +122,7 @@ const addExpense = (event) => {
     };
 
     currentExpenses.unshift(newExpense);
-    
+
     descriptionInput.value = '';
     amountInput.value = '';
 
@@ -140,13 +140,13 @@ const deleteExpense = (id) => {
 const finalizeDay = () => {
     if (budget === 0 && currentExpenses.length === 0) {
         const container = document.getElementById('finalize-status');
-        if(container) {
+        if (container) {
             container.innerHTML = '<p style="color: var(--primary-orange); font-weight: 600;">Error: Please set a budget or log an expense.</p>';
             setTimeout(() => container.innerHTML = '', 3000);
         }
         return;
     }
-    
+
     if (!confirm(`Finalize cycle for ${new Date(currentCycleDate).toLocaleDateString()}? This archives all current data.`)) {
         return;
     }
@@ -162,22 +162,22 @@ const finalizeDay = () => {
         transactions: [...currentExpenses]
     };
 
-    dailyRecords.unshift(newRecord); 
+    dailyRecords.unshift(newRecord);
 
     budget = 0;
     currentExpenses = [];
-    
+
     const nextDay = new Date(currentCycleDate);
     nextDay.setDate(nextDay.getDate() + 1);
     currentCycleDate = nextDay.toISOString().split('T')[0];
-    
+
     renderApp();
     renderBudgetSetter(true);
-    
+
     const container = document.getElementById('finalize-status');
-    if(container) {
-         container.innerHTML = '<p style="color: var(--success-complement); font-weight: 600;">✅ Cycle Finalized! Set your new budget.</p>';
-         setTimeout(() => container.innerHTML = '', 4000);
+    if (container) {
+        container.innerHTML = '<p style="color: var(--success-complement); font-weight: 600;">✅ Cycle Finalized! Set your new budget.</p>';
+        setTimeout(() => container.innerHTML = '', 4000);
     }
 };
 
@@ -214,22 +214,22 @@ const renderBudgetVisualization = () => {
 
     const isOver = expenses > budget;
     const spentPercentage = budget > 0 ? (expenses / budget) * 100 : 0;
-    const normalizedSpent = Math.min(100, spentPercentage); 
+    const normalizedSpent = Math.min(100, spentPercentage);
 
-    const radius = 40; 
-    const strokeWidth = 20; 
+    const radius = 40;
+    const strokeWidth = 20;
 
     const circumference = 2 * Math.PI * radius;
     const spentStroke = (normalizedSpent / 100) * circumference;
-    
-    const spentColorHex = 'var(--primary-orange)'; 
-    const remainingColorHex = 'var(--success-complement)'; 
+
+    const spentColorHex = 'var(--primary-orange)';
+    const remainingColorHex = 'var(--success-complement)';
 
     const centerText = isOver ? 'OVER BUDGET' : `${Math.round(spentPercentage)}% SPENT`;
-    const bottomText = isOver 
-        ? `- ${formatCurrency(balance)} Over` 
+    const bottomText = isOver
+        ? `- ${formatCurrency(balance)} Over`
         : `${formatCurrency(balance)} Remaining`;
-    
+
     const centerTextColor = isOver ? 'var(--primary-orange)' : 'var(--light-text)';
     const bottomTextColor = isOver ? 'var(--primary-orange)' : 'var(--success-complement)';
 
@@ -271,7 +271,7 @@ const renderBudgetVisualization = () => {
  * Main render function to update the entire application UI structure.
  */
 const renderApp = () => {
-    calculateTotals(); 
+    calculateTotals();
     const isOverBudget = balance < 0;
     const remainingCardClasses = isOverBudget ? 'remaining-red' : 'remaining-green';
 
@@ -309,10 +309,10 @@ const renderApp = () => {
 
         <div id="tab-bar">
             <button id="tab-current-btn" class="tab-btn ${currentView === 'current' ? 'active' : ''}">
-                <span style="margin-right: 8px;">🏠</span> Active Dashboard
+                <span style="margin-right: 8px;"></span> Active Dashboard
             </button>
             <button id="tab-history-btn" class="tab-btn ${currentView === 'history' ? 'active' : ''}">
-                <span style="margin-right: 8px;">📚</span> Daily History (${dailyRecords.length} Days)
+                <span style="margin-right: 8px;"></span> Daily History (${dailyRecords.length} Days)
             </button>
         </div>
 
@@ -322,8 +322,8 @@ const renderApp = () => {
 
     // --- 2. Attach Dynamic Renderers/Listeners ---
     attachViewEventListeners();
-    renderActiveView(); 
-    saveData(); 
+    renderActiveView();
+    saveData();
 };
 
 const attachViewEventListeners = () => {
@@ -342,11 +342,11 @@ const renderActiveView = () => {
     const container = document.getElementById('view-content-container');
     if (!container) return;
 
-    container.innerHTML = ''; 
+    container.innerHTML = '';
 
     if (currentView === 'current') {
         container.innerHTML = renderCurrentDayManager();
-        
+
         // Attach logic
         document.getElementById('set-cycle-date-btn').addEventListener('click', setCycleDate);
         renderBudgetSetter(budget === 0);
@@ -362,7 +362,7 @@ const renderActiveView = () => {
 const setCycleDate = () => {
     const input = document.getElementById('cycle-date-input');
     const newDate = input.value;
-    
+
     if (!newDate) return;
 
     if (newDate !== currentCycleDate) {
@@ -381,7 +381,7 @@ const renderCurrentDayManager = () => {
         day: 'numeric',
         year: 'numeric'
     });
-    
+
     return `
         <div id="current-dashboard-grid">
             
@@ -389,7 +389,7 @@ const renderCurrentDayManager = () => {
                 
                 <section class="card" id="add-expense-card">
                     <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 16px; border-bottom: 1px solid var(--olive-tint); padding-bottom: 8px;">
-                        ✍️ Log New Expense
+                        Log New Expense
                     </h2>
                     <form id="add-expense-form" style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
                         <input type="text" id="expense-description-input" placeholder="Expense Description (e.g., Coffee, Grab)" required />
@@ -405,7 +405,7 @@ const renderCurrentDayManager = () => {
 
                 <section class="card" id="expense-history-card" style="flex-grow: 1;">
                     <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 16px; border-bottom: 1px solid var(--olive-tint); padding-bottom: 8px;">
-                        🧾 Transaction History
+                        Transaction History
                     </h2>
                     <div id="history-list-container" style="max-height: 400px; overflow-y: auto;">
                     </div>
@@ -453,7 +453,7 @@ const renderCurrentDayManager = () => {
 const renderBudgetSetter = (isEditing = false) => {
     const container = document.getElementById('budget-setter-card');
     if (!container) return;
-    
+
     const currentBudgetDisplay = formatCurrency(budget);
 
     if (isEditing) {
@@ -499,11 +499,13 @@ const renderExpenseHistory = () => {
         <div class="transaction-item">
             <div class="transaction-item-details">
                 <strong>${item.description}</strong>
-                <small>${new Date(item.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
+                <small>${new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
             </div>
             <div class="transaction-amount-actions" style="display:flex; align-items:center; gap:12px;">
                 <span>- ${formatCurrency(item.amount)}</span>
-                <button class="delete-btn" onclick="deleteExpense('${item.id}')" title="Delete Entry">🗑️</button>
+                <button class="delete-btn" onclick="deleteExpense('${item.id}')" title="Delete Entry">
+                    <i class="bi bi-trash-fill"></i>
+                </button>
             </div>
         </div>
     `).join('');
@@ -522,11 +524,11 @@ const renderDailyHistory = () => {
     return `
         <div class="card" id="history-archive-card">
             ${dailyRecords.map(record => {
-                const isOverspent = record.endingBalance < 0;
-                return `
+        const isOverspent = record.endingBalance < 0;
+        return `
                 <div class="history-record ${isOverspent ? 'overspent' : ''}">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <h3 style="margin:0; font-size:1.1rem;">📅 ${new Date(record.date).toLocaleDateString(undefined, {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})}</h3>
+                        <h3 style="margin:0; font-size:1.1rem;"><i class="bi bi-calendar-event" style="font-size:1.2rem; padding-right: 8px;"></i>${new Date(record.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
                         <span style="font-weight:bold; color:${isOverspent ? 'var(--primary-orange)' : 'var(--success-complement)'};">
                              ${isOverspent ? 'Overspent' : 'Saved'}
                         </span>
@@ -549,7 +551,7 @@ const renderDailyHistory = () => {
                     </details>
                 </div>
                 `;
-            }).join('')}
+    }).join('')}
         </div>
     `;
 };
